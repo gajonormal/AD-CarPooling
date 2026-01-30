@@ -6,26 +6,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth") // <--- Isto é o que o Gateway procura!
+@RequestMapping("/auth")
 public class AuthController {
 
     @Autowired
     private AuthService service;
 
-    // Rota para testar no Browser: http://localhost:8080/auth/login
-    @GetMapping("/login")
-    public String loginPage() {
-        return "OK";
+    // --- AQUI ESTÁ A ALTERAÇÃO ---
+    // 1. Mudamos de GET para POST (Segurança)
+    // 2. O Frontend envia um JSON com { "email": "...", "password": "..." }
+    @PostMapping("/login")
+    public String login(@RequestBody User user) {
+        // CORREÇÃO: Usamos getEmail() porque mudaste o AuthService para validar email!
+        return service.login(user.getEmail(), user.getPassword());
     }
 
-    // Rota para registar utilizadores (via Postman)
+    // O resto mantém-se igual
     @PostMapping("/register")
     public String register(@RequestBody User user) {
         return service.saveUser(user);
     }
+
     @GetMapping("/{id}")
     public User getUserById(@PathVariable("id") Long id) {
-        System.out.println("Recebi pedido para o ID: " + id); // Para veres no log
+        System.out.println("Recebi pedido para o ID: " + id);
         return service.getUserById(id);
     }
 }

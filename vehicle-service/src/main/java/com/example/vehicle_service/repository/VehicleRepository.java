@@ -1,0 +1,10 @@
+package com.example.vehicle_service.repository;
+
+import com.example.vehicle_service.model.Vehicle;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
+    // Encontrar carros de um condutor específico
+    List<Vehicle> findByOwnerId(Long ownerId);
+}
