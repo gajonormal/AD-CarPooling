@@ -1,14 +1,17 @@
 package com.example.booking_service.controller;
+
 import com.example.booking_service.dto.BookingResponseDTO;
-import com.example.booking_service.feign.AuthClient;
+import com.example.booking_service.dto.PaymentDTO; // <--- NOVO
 import com.example.booking_service.dto.TripDTO;
 import com.example.booking_service.dto.UserDTO;
+import com.example.booking_service.feign.AuthClient;
+import com.example.booking_service.feign.PaymentClient; // <--- NOVO
 import com.example.booking_service.feign.TripClient;
 import com.example.booking_service.model.Booking;
 import com.example.booking_service.repository.BookingRepository;
-import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -17,37 +20,63 @@ public class BookingController {
 
     @Autowired
     private BookingRepository repository;
-
     @Autowired
-    private TripClient tripClient; // <--- Injetar o Cliente
+    private TripClient tripClient;
     @Autowired
     private AuthClient authClient;
 
+    @Autowired
+    private PaymentClient paymentClient; // <--- 1. INJETAR O CLIENTE DE PAGAMENTOS
+
+    // --- 1. CRIAR RESERVA (Com Pagamento Automático) ---
     @PostMapping
     public Object createBooking(@RequestBody Booking booking) {
         try {
-            System.out.println("A verificar viagem " + booking.getTripId() + "...");
-
-            // 1. Perguntar ao Trip Service
+            // A. Validar se a Viagem existe
             TripDTO trip = tripClient.getTripById(booking.getTripId());
+            if (trip == null) throw new RuntimeException("Viagem não encontrada");
 
-            // Se o trip for nulo (vazio), nós forçamos o erro para ir para o 'catch'
-            if (trip == null) {
-                throw new RuntimeException("Viagem retornou nulo");
-            }
+            // B. Validar se o Passageiro existe
             UserDTO user = authClient.getUserById(booking.getPassengerId());
             if (user == null) throw new RuntimeException("Utilizador não existe");
-            // ----------------------------
 
-            // 2. Se passou do 'if', grava a reserva.
+            // C. Definir o Preço
+            double price = (trip.getPrice() != 0) ? trip.getPrice() : 0.0;
+            booking.setPrice(price);
             booking.setStatus("CONFIRMED");
-            return repository.save(booking);
+
+            // D. Gravar a Reserva (Para gerar o ID)
+            Booking savedBooking = repository.save(booking);
+
+            // E. INTEGRAR COM O PAGAMENTO (O passo do 20 valores!) 💸
+            // Só fazemos isto se houver um preço a pagar
+            if (price > 0) {
+                try {
+                    System.out.println("--- A contactar o Payment-Service para cobrar " + price + "€ ---");
+
+                    // Criamos o DTO para enviar ao outro serviço
+                    // Nota: Assumimos "MBWAY" fixo para simplificar o teste
+                    PaymentDTO payment = new PaymentDTO(savedBooking.getId(), price, "MBWAY");
+
+                    // Chamada Feign ao Payment-Service
+                    paymentClient.processPayment(payment);
+
+                } catch (Exception e) {
+                    // Se o serviço de pagamentos falhar, não cancelamos a reserva,
+                    // mas deixamos um aviso no log.
+                    System.out.println("⚠️ Erro ao processar pagamento automático: " + e.getMessage());
+                }
+            }
+
+            return savedBooking;
 
         } catch (Exception e) {
-            // 3. Agora sim, vai cair aqui!
-            return "Erro: Viagem " + booking.getTripId() + " não encontrada!";
+            e.printStackTrace();
+            return "Erro ao criar reserva: " + e.getMessage();
         }
     }
+
+    // --- 2. OBTER DETALHES COMPLETOS ---
     @GetMapping("/{id}/full")
     public Object getFullBookingDetails(@PathVariable Long id) {
         try {
@@ -57,38 +86,26 @@ public class BookingController {
             BookingResponseDTO response = new BookingResponseDTO();
             response.setBookingId(booking.getId());
             response.setStatus(booking.getStatus());
+            response.setPrice(booking.getPrice());
 
-            // Tentamos buscar o utilizador, se falhar, definimos como "Indisponível"
             try {
                 UserDTO user = authClient.getUserById(booking.getPassengerId());
-                response.setPassengerName(user != null ? user.getName() : "Utilizador não encontrado");
-            } catch (Exception e) {
-                response.setPassengerName("Serviço de Autenticação Offline");
-            }
+                response.setPassengerName(user != null ? user.getName() : "Utilizador Desconhecido");
+            } catch (Exception e) { response.setPassengerName("Erro Auth"); }
 
-            // Tentamos buscar a viagem, se falhar, definimos como "Indisponível"
             try {
                 TripDTO trip = tripClient.getTripById(booking.getTripId());
                 if (trip != null) {
                     response.setDestination(trip.getDestination());
                     response.setDepartureTime(trip.getDepartureTime());
-                } else {
-                    response.setDestination("Viagem não encontrada");
-                }
-            } catch (Exception e) {
-                response.setDestination("Serviço de Viagens Offline");
-            }
+                } else { response.setDestination("Erro Trip"); }
+            } catch (Exception e) { response.setDestination("Erro Trip"); }
 
             return response;
-
-        } catch (Exception e) {
-            return "Erro fatal: " + e.getMessage();
-        }
+        } catch (Exception e) { return "Erro: " + e.getMessage(); }
     }
 
+    // --- 3. LISTAR TODAS ---
     @GetMapping
-    public List<Booking> getAllBookings() {
-        return repository.findAll();
-    }
-
+    public List<Booking> getAllBookings() { return repository.findAll(); }
 }

@@ -1,7 +1,6 @@
 package com.example.booking_service.model;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,15 +15,21 @@ public class Booking {
     private Long passengerId; // ID do utilizador (vem do Auth Service)
 
     private LocalDateTime bookingDate;
-    private String status; // Ex: "CONFIRMED", "CANCELLED"
+    private String status; // Ex: "CONFIRMED", "CANCELLED", "PAID"
+
+    // --- NOVO CAMPO OBRIGATÓRIO (CUSTOS) ---
+    // Armazena o valor que este passageiro específico vai pagar
+    private Double price;
 
     // Construtor vazio obrigatório
     public Booking() {
         this.bookingDate = LocalDateTime.now();
         this.status = "CONFIRMED";
+        this.price = 0.0; // Inicializamos a zero para não dar erro
     }
 
-    // Getters e Setters
+    // --- Getters e Setters ---
+
     public Long getId() {
         return id;
     }
@@ -63,5 +68,14 @@ public class Booking {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    // Novos Getters e Setters para o Preço
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
     }
 }

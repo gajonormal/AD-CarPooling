@@ -1,8 +1,12 @@
 package com.example.trip_service.controller;
 
 import com.example.trip_service.dto.UserDTO;
+import com.example.trip_service.dto.VehicleDTO;
+import com.example.trip_service.feign.VehicleClient;
 import com.example.trip_service.model.Trip;
+import com.example.trip_service.model.TripStatus; // <--- OBRIGATÓRIO
 import com.example.trip_service.service.TripService;
+import com.example.trip_service.feign.UserClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,54 +19,77 @@ public class TripController {
     @Autowired
     private TripService service;
 
-    // Criar Viagem: POST /trips
+    @Autowired
+    private UserClient userClient;
+
+    @Autowired
+    private VehicleClient vehicleClient;
+
+    // 1. Criar Viagem
     @PostMapping
     public Trip createTrip(@RequestBody Trip trip) {
+        // CORREÇÃO: Usar o Enum e não String
+        trip.setStatus(TripStatus.CREATED);
         return service.createTrip(trip);
     }
 
-    // Listar Todas: GET /trips
+    // 2. Listar Todas
     @GetMapping
     public List<Trip> getAllTrips() {
         return service.getAllTrips();
     }
 
-    // Procurar por destino: GET /trips/search?destination=Lisboa
+    // 3. Procurar por destino
     @GetMapping("/search")
     public List<Trip> searchTrips(@RequestParam String destination) {
         return service.searchTrips(destination);
     }
 
-    // Ver detalhe de uma viagem: GET /trips/{id}
+    // 4. Ver detalhe básico
     @GetMapping("/{id}")
     public Trip getTripById(@PathVariable Long id) {
         return service.getTripById(id);
     }
-    @Autowired
-    private com.example.trip_service.feign.UserClient userClient; // Injetar o Feign
 
+    // 5. Alterar Estado da Viagem
+    @PatchMapping("/{id}/status")
+    public Trip updateStatus(@PathVariable Long id, @RequestParam TripStatus status) {
+        // O Spring converte automaticamente o texto da URL (ex: ?status=IN_PROGRESS)
+        // para o Enum TripStatus.IN_PROGRESS
+        return service.updateTripStatus(id, status);
+    }
+
+    // 6. Detalhes Completos (Condutor + Veículo)
     @GetMapping("/{id}/full-details")
-    public String getTripWithDriverName(@PathVariable Long id) {
-        // 1. Ir buscar a viagem localmente
+    public String getTripFullDetails(@PathVariable Long id) {
         Trip trip = service.getTripById(id);
-
         if (trip == null) return "Viagem não encontrada";
 
-        // 2. Usar o Feign para ir buscar o nome ao Auth Service
-        // O try-catch serve para não dar erro se o Auth Service estiver em baixo
+        // Buscar Condutor
         String driverName = "Desconhecido";
         try {
             UserDTO user = userClient.getUserById(trip.getDriverId());
-            if (user != null) {
-                driverName = user.getName();
-            }
+            if (user != null) driverName = user.getName();
         } catch (Exception e) {
-            // ADICIONA ESTA LINHA ABAIXO PARA VER O ERRO NO CONSOLE
-            e.printStackTrace();
-
-            driverName = "Erro ao obter condutor: " + e.getMessage();
+            driverName = "Erro Auth";
         }
 
-        return "Viagem para " + trip.getDestination() + " conduzida por: " + driverName;
+        // Buscar Veículo
+        String carDetails = "Carro não encontrado";
+        try {
+            if (trip.getVehicleId() != null) {
+                VehicleDTO vehicle = vehicleClient.getVehicleById(trip.getVehicleId());
+                if (vehicle != null) {
+                    carDetails = vehicle.getBrand() + " " + vehicle.getModel() + " (" + vehicle.getLicensePlate() + ")";
+                }
+            }
+        } catch (Exception e) {
+            carDetails = "Erro Vehicle Service";
+        }
+
+        return "Viagem para " + trip.getDestination() +
+                " | Estado: " + trip.getStatus() +
+                " | Condutor: " + driverName +
+                " | Veículo: " + carDetails;
     }
 }
