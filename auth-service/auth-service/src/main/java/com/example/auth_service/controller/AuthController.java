@@ -3,6 +3,7 @@ package com.example.auth_service.controller;
 import com.example.auth_service.model.User;
 import com.example.auth_service.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,9 +17,13 @@ public class AuthController {
     // 1. Mudamos de GET para POST (Segurança)
     // 2. O Frontend envia um JSON com { "email": "...", "password": "..." }
     @PostMapping("/login")
-    public String login(@RequestBody User user) {
-        // CORREÇÃO: Usamos getEmail() porque mudaste o AuthService para validar email!
-        return service.login(user.getEmail(), user.getPassword());
+    public ResponseEntity<?> login(@RequestBody User user) {
+        User loggedUser = service.login(user.getEmail(), user.getPassword());
+
+        if (loggedUser != null) {
+            return ResponseEntity.ok(loggedUser); // 200 OK + JSON do User
+        }
+        return ResponseEntity.status(401).body("Email ou Password errados");
     }
 
     // O resto mantém-se igual
