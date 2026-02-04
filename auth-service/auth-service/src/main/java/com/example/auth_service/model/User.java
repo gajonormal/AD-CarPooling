@@ -17,6 +17,8 @@ public class User {
 
     private String email; // <--- O CAMPO QUE FALTAVA
 
+    private String type;
+
     // --- CONSTRUTORES ---
 
     public User() {
@@ -26,6 +28,7 @@ public class User {
         this.name = name;
         this.password = password;
         this.email = email;
+        this.type = type;
     }
 
     // --- GETTERS E SETTERS MANUAIS ---
@@ -61,4 +64,6 @@ public class User {
     public void setEmail(String email) { // <--- Setter do Email
         this.email = email;
     }
+    public String getType() { return type; }       // <--- Novo Getter
+    public void setType(String type) { this.type = type; } // <--- Novo Setter
 }

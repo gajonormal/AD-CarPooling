@@ -27,20 +27,13 @@ public class AuthService {
         return repository.findById(id).orElse(null);
     }
 
-    // 3. LOGIN (Atualizado para Email) 📧
-    public String login(String email, String password) {
-        // A. Procurar o user pelo EMAIL
+    // 3. LOGIN (Atualizado para devolver o Objeto User ou null)
+    public User login(String email, String password) {
         User user = repository.findByEmail(email).orElse(null);
 
-        if (user == null) {
-            return "NOK"; // Email não existe
+        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
+            return user; // Sucesso: Devolve o utilizador todo (com ID, Nome, etc.)
         }
-
-        // B. Verificar a password
-        if (passwordEncoder.matches(password, user.getPassword())) {
-            return "OK"; // Sucesso!
-        }
-
-        return "NOK"; // Password errada
+        return null; // Falha
     }
 }
