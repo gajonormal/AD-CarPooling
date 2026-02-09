@@ -115,7 +115,7 @@
                 showAlert("success", `Bem-vindo, ${user.name}! A entrar...`);
 
                 // Aguarda 1.5s e redireciona (futuramente para /dashboard)
-                // setTimeout(() => window.location.href = "/dashboard", 1500);
+                setTimeout(() => window.location.href = "/dashboard", 1000);
                 console.log("Login OK! User ID: " + user.id);
 
             } else {

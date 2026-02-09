@@ -92,4 +92,9 @@ public class TripController {
                 " | Condutor: " + driverName +
                 " | Veículo: " + carDetails;
     }
+    @PostMapping("/{id}/reduce")
+    public boolean reduceSeat(@PathVariable Long id) {
+        return service.reduceSeat(id);
+    }
+
 }
