@@ -3,12 +3,17 @@ package com.example.frontend_service.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
-@Controller // <--- Isto define que é MVC
+@Controller
 public class ViewController {
 
-    // Quando acederem a http://localhost:9090/
     @GetMapping("/")
     public String loginPage() {
-        return "login"; // Vai procurar o ficheiro login.html na pasta templates
+        return "login"; // Abre login.html
+    }
+
+    // --- NOVO: Rota para a Dashboard ---
+    @GetMapping("/dashboard")
+    public String dashboardPage() {
+        return "dashboard"; // Abre dashboard.html (que vamos criar a seguir)
     }
 }
