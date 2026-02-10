@@ -57,4 +57,22 @@ public class TripService {
         }
         return null; // Retorna null se a viagem não existir
     }
+    // Lógica para diminuir 1 lugar
+    public boolean reduceSeat(Long tripId) {
+        Trip trip = repository.findById(tripId).orElse(null);
+
+        // Se a viagem existe e tem lugares > 0
+        if (trip != null && trip.getAvailableSeats() > 0) {
+            trip.setAvailableSeats(trip.getAvailableSeats() - 1);
+
+            // Se ficou com 0, muda estado para FULL
+            if (trip.getAvailableSeats() == 0) {
+                trip.setStatus(TripStatus.valueOf("FULL"));
+            }
+
+            repository.save(trip);
+            return true; // Sucesso
+        }
+        return false; // Falha (não há lugares ou viagem não existe)
+    }
 }
