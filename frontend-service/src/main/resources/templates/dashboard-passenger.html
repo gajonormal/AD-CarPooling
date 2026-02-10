@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Painel do Passageiro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-primary p-3">
+    <div class="container">
+        <span class="navbar-brand">🎒 Painel do Passageiro</span>
+        <a href="/logout" class="btn btn-outline-light btn-sm">Sair</a>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <h2 class="mb-4">Olá, <span th:text="${user.name}">Passageiro</span>!</h2>
+
+    <div class="card p-4 mb-4 shadow-sm">
+        <form action="/trips/search" method="get" class="row g-2">
+            <div class="col-md-8">
+                <input type="text" name="destination" class="form-control" placeholder="Para onde queres ir?">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-warning w-100">Procurar</button>
+            </div>
+        </form>
+    </div>
+
+    <h3>Viagens Disponíveis</h3>
+    <div class="list-group mt-3">
+        <div th:each="trip : ${trips}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                    <span th:text="${trip.origin}">Origem</span> ➝
+                    <span th:text="${trip.destination}">Destino</span>
+                </h5>
+                <small>Partida: <span th:text="${#temporals.format(trip.departureTime, 'dd-MM-yyyy HH:mm')}">Data</span></small>
+            </div>
+
+            <p class="mb-1">
+                Preço: <strong th:text="${trip.price} + ' €'"></strong> |
+                Lugares: <span th:text="${trip.availableSeats}"></span>
+            </p>
+
+            <button class="btn btn-sm btn-outline-primary">Ver Detalhes</button>
+        </div>
+
+        <div th:if="${#lists.isEmpty(trips)}" class="alert alert-info mt-3">
+            Nenhuma viagem encontrada. Tenta outro destino!
+        </div>
+    </div>
+</div>
+</body>
+</html>
