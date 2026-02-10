@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,14 +41,17 @@
     <div class="tab-content" id="myTabContent">
 
         <div class="tab-pane fade show active" id="login" role="tabpanel">
-            <form id="loginForm">
+
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+            <form action="/login" method="post">
                 <div class="mb-3">
                     <label class="form-label">Email</label>
-                    <input type="email" class="form-control" id="loginEmail" placeholder="ex: joao@mail.com" required>
+                    <input type="email" name="email" class="form-control" placeholder="ex: condutor@mail.com" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Password</label>
-                    <input type="password" class="form-control" id="loginPassword" required>
+                    <input type="password" name="password" class="form-control" required>
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Entrar</button>
             </form>
@@ -77,57 +80,17 @@
                 </div>
                 <button type="submit" class="btn btn-success w-100">Criar Conta</button>
             </form>
+            <div id="registerAlert" class="mt-2"></div>
         </div>
     </div>
-
-    <div id="alertBox" class="mt-3"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    const API_URL = "http://localhost:8080/auth"; // O teu Gateway
+    // Mantemos o JavaScript APENAS para o registo, para facilitar
+    const API_URL = "http://localhost:8080/auth";
 
-    // --- LOGIN ---
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const email = document.getElementById("loginEmail").value;
-        const password = document.getElementById("loginPassword").value;
-
-        try {
-            const response = await fetch(`${API_URL}/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: email, password: password })
-            });
-
-            if (response.ok) {
-                // AQUI ESTÁ A MUDANÇA: Recebemos um JSON, não texto
-                const user = await response.json();
-
-                // Guardamos tudo no browser para usar na próxima página
-                localStorage.setItem("userId", user.id);
-                localStorage.setItem("userName", user.name);
-                localStorage.setItem("userEmail", user.email);
-                localStorage.setItem("userType", user.type);
-
-                showAlert("success", `Bem-vindo, ${user.name}! A entrar...`);
-
-                // Aguarda 1.5s e redireciona (futuramente para /dashboard)
-                setTimeout(() => window.location.href = "/dashboard", 1000);
-                console.log("Login OK! User ID: " + user.id);
-
-            } else {
-                showAlert("danger", "Email ou Password errados.");
-            }
-        } catch (error) {
-            console.error(error);
-            showAlert("danger", "Erro de ligação ao servidor.");
-        }
-    });
-
-    // --- REGISTO ---
     document.getElementById("registerForm").addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -146,26 +109,24 @@
             });
 
             if (response.ok) {
-                showAlert("success", "Registado com sucesso! Faz login agora.");
+                document.getElementById("registerAlert").innerHTML = '<div class="alert alert-success">Registado! Faz login agora.</div>';
                 document.getElementById("registerForm").reset();
-                // Muda para a aba de login automaticamente
-                setTimeout(() => document.getElementById("login-tab").click(), 1500);
+
+                // Muda automaticamente para a aba de Login após 1.5 segundos
+                setTimeout(() => {
+                    const loginTab = new bootstrap.Tab(document.getElementById('login-tab'));
+                    loginTab.show();
+                    document.getElementById("registerAlert").innerHTML = "";
+                }, 1500);
+
             } else {
-                showAlert("danger", "Erro ao registar.");
+                document.getElementById("registerAlert").innerHTML = '<div class="alert alert-danger">Erro ao registar. Tenta outro email.</div>';
             }
         } catch (error) {
-            showAlert("danger", "Erro de ligação.");
+            document.getElementById("registerAlert").innerHTML = '<div class="alert alert-danger">Erro de ligação.</div>';
         }
     });
-
-    function showAlert(type, message) {
-        document.getElementById("alertBox").innerHTML = `
-                <div class="alert alert-${type} alert-dismissible fade show">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-    }
 </script>
+
 </body>
 </html>
