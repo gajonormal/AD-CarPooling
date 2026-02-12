@@ -4,7 +4,7 @@ import com.example.trip_service.dto.UserDTO;
 import com.example.trip_service.dto.VehicleDTO;
 import com.example.trip_service.feign.VehicleClient;
 import com.example.trip_service.model.Trip;
-import com.example.trip_service.model.TripStatus; // <--- OBRIGATÓRIO
+import com.example.trip_service.model.TripStatus;
 import com.example.trip_service.service.TripService;
 import com.example.trip_service.feign.UserClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,47 +25,57 @@ public class TripController {
     @Autowired
     private VehicleClient vehicleClient;
 
-    // 1. Criar Viagem
     @PostMapping
     public Trip createTrip(@RequestBody Trip trip) {
-        // CORREÇÃO: Usar o Enum e não String
-        trip.setStatus(TripStatus.CREATED);
         return service.createTrip(trip);
     }
 
-    // 2. Listar Todas
     @GetMapping
     public List<Trip> getAllTrips() {
         return service.getAllTrips();
     }
 
-    // 3. Procurar por destino
     @GetMapping("/search")
     public List<Trip> searchTrips(@RequestParam String destination) {
         return service.searchTrips(destination);
     }
 
-    // 4. Ver detalhe básico
     @GetMapping("/{id}")
     public Trip getTripById(@PathVariable Long id) {
         return service.getTripById(id);
     }
 
-    // 5. Alterar Estado da Viagem
-    @PatchMapping("/{id}/status")
-    public Trip updateStatus(@PathVariable Long id, @RequestParam TripStatus status) {
-        // O Spring converte automaticamente o texto da URL (ex: ?status=IN_PROGRESS)
-        // para o Enum TripStatus.IN_PROGRESS
-        return service.updateTripStatus(id, status);
+    @PutMapping("/{id}/status")
+    public Trip updateStatus(@PathVariable Long id, @RequestParam String status) {
+        return service.updateStatus(id, status);
     }
 
-    // 6. Detalhes Completos (Condutor + Veículo)
+    @PostMapping("/{id}/reduce")
+    public boolean reduceSeat(@PathVariable Long id) {
+        return service.reduceSeat(id);
+    }
+
+    // --- NOVOS MÉTODOS PARA O HISTÓRICO ---
+
+    // 8. Buscar histórico do Condutor
+    @GetMapping("/history/driver/{driverId}")
+    public List<Trip> getDriverHistory(@PathVariable Long driverId) {
+        // Busca todas as viagens do condutor com status FINISHED
+        return service.getTripsByDriverAndStatus(driverId, TripStatus.FINISHED);
+    }
+
+    // 9. Buscar detalhes de várias viagens (útil para o histórico do passageiro)
+    @PostMapping("/history/list")
+    public List<Trip> getTripsByIds(@RequestBody List<Long> tripIds) {
+        return service.getTripsByIds(tripIds);
+    }
+
+    // --- MANTENDO O TEU MÉTODO DE DETALHES ---
     @GetMapping("/{id}/full-details")
     public String getTripFullDetails(@PathVariable Long id) {
         Trip trip = service.getTripById(id);
         if (trip == null) return "Viagem não encontrada";
 
-        // Buscar Condutor
         String driverName = "Desconhecido";
         try {
             UserDTO user = userClient.getUserById(trip.getDriverId());
@@ -74,7 +84,6 @@ public class TripController {
             driverName = "Erro Auth";
         }
 
-        // Buscar Veículo
         String carDetails = "Carro não encontrado";
         try {
             if (trip.getVehicleId() != null) {
@@ -92,9 +101,4 @@ public class TripController {
                 " | Condutor: " + driverName +
                 " | Veículo: " + carDetails;
     }
-    @PostMapping("/{id}/reduce")
-    public boolean reduceSeat(@PathVariable Long id) {
-        return service.reduceSeat(id);
-    }
-
 }

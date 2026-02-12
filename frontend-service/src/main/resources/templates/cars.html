@@ -5,45 +5,48 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-
-<nav class="navbar navbar-dark bg-dark mb-4 p-3">
+<nav class="navbar navbar-dark bg-dark p-3">
     <div class="container">
-        <a class="navbar-brand" href="/dashboard">🚖 Voltar ao Dashboard</a>
-        <a href="/logout" class="btn btn-danger btn-sm">Sair</a>
+        <a class="navbar-brand" href="/dashboard">🏠 Voltar ao Dashboard</a>
+        <a href="/logout" class="btn btn-outline-danger btn-sm">Sair</a>
     </div>
 </nav>
-
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>🚗 Meus Carros</h2>
-        <a href="/cars/new" class="btn btn-success">+ Adicionar Carro</a>
+<div class="container mt-3">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Os Meus Veículos</h2>
+        <a href="/cars/new" class="btn btn-success">➕ Adicionar Novo Carro</a>
     </div>
 
-    <div class="card shadow">
+    <div class="card shadow-sm">
         <div class="card-body">
-
-            <div th:if="${#lists.isEmpty(cars)}" class="alert alert-warning">
-                Ainda não tens carros registados. Adiciona um para começares a dar boleias!
-            </div>
-
-            <table th:if="${not #lists.isEmpty(cars)}" class="table table-hover align-middle">
+            <table class="table table-hover">
                 <thead class="table-light">
                 <tr>
-                    <th>Marca / Modelo</th>
+                    <th>Marca</th>
+                    <th>Modelo</th>
                     <th>Matrícula</th>
-                    <th>Ano</th>
-                    <th>Localização Base</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="car : ${cars}">
-                    <td>
-                        <strong th:text="${car.brand}">Marca</strong>
-                        <span th:text="${car.model}">Modelo</span>
+                    <td th:text="${car.brand}">Tesla</td>
+                    <td th:text="${car.model}">Model 3</td>
+                    <td th:text="${car.licensePlate}">AA-00-XX</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(cars)}">
+                    <td colspan="3" class="text-center text-muted p-3">
+                        Ainda não tens carros registados. Adiciona um acima! 👆
                     </td>
-                    <td><span class="badge bg-secondary" th:text="${car.licensePlate}">XX-00-XX</span></td>
-                    <td th:text="${car.year}">2020</td>
-                    <td th:text="${car.location}">Lisboa</td>
                 </tr>
                 </tbody>
             </table>

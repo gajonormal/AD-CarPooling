@@ -15,9 +15,17 @@ public class User {
 
     private String password;
 
-    private String email; // <--- O CAMPO QUE FALTAVA
+    private String email;
 
     private String type;
+
+    private String preferences;
+
+    private Double currentRating = 5.0;
+    private Integer ratingCount = 0;
+
+    // --- CAMPO OBRIGATÓRIO PARA A ADMINISTRAÇÃO ---
+    private boolean suspended = false; // Começa como falso (ativo)
 
     // --- CONSTRUTORES ---
 
@@ -31,7 +39,7 @@ public class User {
         this.type = type;
     }
 
-    // --- GETTERS E SETTERS MANUAIS ---
+    // --- GETTERS E SETTERS ---
 
     public Long getId() {
         return id;
@@ -57,13 +65,52 @@ public class User {
         this.password = password;
     }
 
-    public String getEmail() { // <--- Getter do Email
+    public String getEmail() {
         return email;
     }
 
-    public void setEmail(String email) { // <--- Setter do Email
+    public void setEmail(String email) {
         this.email = email;
     }
-    public String getType() { return type; }       // <--- Novo Getter
-    public void setType(String type) { this.type = type; } // <--- Novo Setter
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getPreferences() {
+        return preferences;
+    }
+
+    public void setPreferences(String preferences) {
+        this.preferences = preferences;
+    }
+
+    public Double getCurrentRating() {
+        return currentRating;
+    }
+
+    public void setCurrentRating(Double currentRating) {
+        this.currentRating = currentRating;
+    }
+
+    public Integer getRatingCount() {
+        return ratingCount;
+    }
+
+    public void setRatingCount(Integer ratingCount) {
+        this.ratingCount = ratingCount;
+    }
+
+    // --- GETTERS E SETTERS DA SUSPENSÃO (Sem isto o Admin falha!) ---
+    public boolean isSuspended() {
+        return suspended;
+    }
+
+    public void setSuspended(boolean suspended) {
+        this.suspended = suspended;
+    }
 }

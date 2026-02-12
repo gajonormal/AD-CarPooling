@@ -1,23 +1,36 @@
 package com.example.frontend_service.dto;
 
-import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 
 public class TripDTO {
+
     private Long id;
     private String origin;
     private String destination;
-
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) // Importante para o HTML
     private LocalDateTime departureTime;
-
     private double price;
     private int availableSeats;
-    private Long driverId; // Vamos preencher isto automaticamente com a sessão
-    private Long vehicleId; // Opcional por agora
-    private String status;
+    private Long driverId;
 
-    // --- Getters e Setters (Podes gerar com Alt+Insert) ---
+    // 👇 ESTES ERAM OS QUE FALTAVAM E CAUSAVAM O ERRO 500 👇
+    private Long vehicleId;
+    private String status;  // "CREATED", "FINISHED", etc.
+
+    // Construtores
+    public TripDTO() {}
+
+    public TripDTO(Long id, String origin, String destination, double price, int availableSeats, Long driverId, Long vehicleId, String status) {
+        this.id = id;
+        this.origin = origin;
+        this.destination = destination;
+        this.price = price;
+        this.availableSeats = availableSeats;
+        this.driverId = driverId;
+        this.vehicleId = vehicleId;
+        this.status = status;
+    }
+
+    // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getOrigin() { return origin; }
@@ -32,6 +45,8 @@ public class TripDTO {
     public void setAvailableSeats(int availableSeats) { this.availableSeats = availableSeats; }
     public Long getDriverId() { return driverId; }
     public void setDriverId(Long driverId) { this.driverId = driverId; }
+
+    // 👇 Getters e Setters dos Novos Campos 👇
     public Long getVehicleId() { return vehicleId; }
     public void setVehicleId(Long vehicleId) { this.vehicleId = vehicleId; }
     public String getStatus() { return status; }

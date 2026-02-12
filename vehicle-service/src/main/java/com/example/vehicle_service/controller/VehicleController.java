@@ -1,8 +1,9 @@
 package com.example.vehicle_service.controller;
 
 import com.example.vehicle_service.model.Vehicle;
-import com.example.vehicle_service.repository.VehicleRepository;
+import com.example.vehicle_service.service.VehicleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity; // Importa isto
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,53 +13,32 @@ import java.util.List;
 public class VehicleController {
 
     @Autowired
-    private VehicleRepository repository;
+    private VehicleService service;
 
-    // 1. Criar novo carro (Admin ou Empresa)
     @PostMapping
     public Vehicle createVehicle(@RequestBody Vehicle vehicle) {
-        vehicle.setRented(false); // Nasce sempre livre
-        return repository.save(vehicle);
+        return service.createVehicle(vehicle);
     }
 
-    // 2. Listar APENAS carros livres (Para o Cliente escolher)
-    @GetMapping("/available")
-    public List<Vehicle> getAvailableVehicles() {
-        return repository.findByIsRentedFalse();
-    }
-
-    // 3. Listar TODOS (Para o Admin ver o inventário)
     @GetMapping
     public List<Vehicle> getAllVehicles() {
-        return repository.findAll();
+        return service.getAllVehicles();
     }
 
-    // 4. ALUGAR (Muda o estado para Ocupado)
-    @PostMapping("/{id}/rent")
-    public Vehicle rentVehicle(@PathVariable Long id) {
-        Vehicle v = repository.findById(id).orElse(null);
-
-        if (v == null) {
-            throw new RuntimeException("Veículo não encontrado!");
-        }
-        if (v.isRented()) {
-            throw new RuntimeException("Este carro já está alugado!");
-        }
-
-        v.setRented(true); // Bloqueia o carro
-        return repository.save(v);
+    @GetMapping("/{id}")
+    public Vehicle getVehicleById(@PathVariable Long id) {
+        return service.getVehicleById(id);
     }
 
-    // 5. DEVOLVER (Muda o estado para Livre)
-    @PostMapping("/{id}/return")
-    public Vehicle returnVehicle(@PathVariable Long id) {
-        Vehicle v = repository.findById(id).orElse(null);
+    @GetMapping("/owner/{ownerId}")
+    public List<Vehicle> getVehiclesByOwner(@PathVariable Long ownerId) {
+        return service.getVehiclesByOwner(ownerId);
+    }
 
-        if (v == null) {
-            throw new RuntimeException("Veículo não encontrado!");
-        }
-
-        v.setRented(false); // Liberta o carro
-        return repository.save(v);
+    // 👇 ADICIONA ESTE MÉTODO QUE ESTAVA EM FALTA 👇
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteVehicle(@PathVariable("id") Long id) {
+        service.deleteVehicle(id); // Garante que este método existe no teu VehicleService
+        return ResponseEntity.noContent().build();
     }
 }

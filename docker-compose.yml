@@ -39,6 +39,16 @@ services:
       - service-registry
       - auth-service
 
+  admin-service:
+    build: ./admin-service
+    ports:
+      - "8090:8090"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+    depends_on:
+      - service-registry
+      - auth-service # O Admin depende do Auth para funcionar
+
   # --- 5. BOOKING SERVICE (Reservas - 8083) ---
   booking-service:
     build: ./booking-service
@@ -77,4 +87,6 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
     depends_on:
+      - service-registry
       - api-gateway
+

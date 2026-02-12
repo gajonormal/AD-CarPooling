@@ -24,4 +24,7 @@ public interface VehicleClient {
     // (Opcional) Se quiseres ver só um carro específico
     @GetMapping("/vehicles/{id}")
     VehicleDTO getVehicleById(@PathVariable("id") Long id);
+
+    @GetMapping("/vehicles/owner/{ownerId}")
+    List<VehicleDTO> getVehiclesByOwner(@PathVariable("ownerId") Long ownerId);
 }

@@ -5,50 +5,101 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
+
 <nav class="navbar navbar-dark bg-primary p-3">
     <div class="container">
-        <span class="navbar-brand">🎒 Painel do Passageiro</span>
-        <a href="/logout" class="btn btn-outline-light btn-sm">Sair</a>
+        <a class="navbar-brand fw-bold" href="/dashboard">
+            <i class="bi bi-car-front-fill"></i> Car Pooling
+        </a>
+
+        <div class="d-flex gap-2">
+            <a href="/profile" class="btn btn-light btn-sm text-primary fw-bold">
+                <i class="bi bi-person-circle"></i> O Meu Perfil
+            </a>
+
+            <a href="/logout" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-box-arrow-right"></i> Sair
+            </a>
+        </div>
     </div>
 </nav>
 
-<div class="container mt-5">
-    <h2 class="mb-4">Olá, <span th:text="${user.name}">Passageiro</span>!</h2>
+<div class="container mt-3">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
 
-    <div class="card p-4 mb-4 shadow-sm">
-        <form action="/trips/search" method="get" class="row g-2">
-            <div class="col-md-8">
+<div class="container mt-5">
+
+    <div class="card p-3 mb-4 bg-white shadow-sm">
+        <h5 class="mb-3">🔍 Procurar Boleia</h5>
+        <form action="/dashboard" method="get" class="row g-3">
+            <div class="col-md-4">
                 <input type="text" name="destination" class="form-control" placeholder="Para onde queres ir?">
             </div>
             <div class="col-md-4">
-                <button type="submit" class="btn btn-warning w-100">Procurar</button>
+                <button type="submit" class="btn btn-primary w-100">Pesquisar</button>
+            </div>
+            <div class="col-md-4">
+                <a href="/dashboard" class="btn btn-outline-secondary w-100">Ver Todas</a>
             </div>
         </form>
     </div>
 
     <h3>Viagens Disponíveis</h3>
+
     <div class="list-group mt-3">
-        <div th:each="trip : ${trips}" class="list-group-item list-group-item-action">
-            <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">
-                    <span th:text="${trip.origin}">Origem</span> ➝
-                    <span th:text="${trip.destination}">Destino</span>
-                </h5>
-                <small>Partida: <span th:text="${#temporals.format(trip.departureTime, 'dd-MM-yyyy HH:mm')}">Data</span></small>
+        <div th:each="trip : ${trips}" class="list-group-item list-group-item-action mb-3 border rounded shadow-sm">
+            <div class="d-flex w-100 justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1 text-primary">
+                        <span th:text="${trip.origin}">Origem</span> ➝
+                        <span th:text="${trip.destination}">Destino</span>
+                    </h5>
+                    <small class="text-muted">
+                        📅 Partida: <strong th:text="${#temporals.format(trip.departureTime, 'dd-MM-yyyy HH:mm')}">Data</strong>
+                    </small>
+
+                    <p class="mb-1 mt-2">
+                        💰 Custo Total: <strong th:text="${trip.price} + ' €'"></strong>
+                        <span class="text-muted" style="font-size: 0.9em;">(a dividir pelos ocupantes)</span>
+                    </p>
+
+                    <p class="mb-0">
+                        💺 Lugares Livres: <span class="badge bg-info text-dark" th:text="${trip.availableSeats}"></span>
+                    </p>
+                </div>
+
+                <div>
+                    <div th:if="${trip.availableSeats > 0}">
+                        <form action="/bookings/create" method="post">
+                            <input type="hidden" name="tripId" th:value="${trip.id}">
+
+                            <button type="submit" class="btn btn-outline-primary btn-lg">
+                                📩 Enviar Pedido
+                            </button>
+                        </form>
+                    </div>
+
+                    <div th:if="${trip.availableSeats == 0}">
+                        <button class="btn btn-secondary btn-lg" disabled>Esgotado ❌</button>
+                    </div>
+                </div>
             </div>
-
-            <p class="mb-1">
-                Preço: <strong th:text="${trip.price} + ' €'"></strong> |
-                Lugares: <span th:text="${trip.availableSeats}"></span>
-            </p>
-
-            <button class="btn btn-sm btn-outline-primary">Ver Detalhes</button>
         </div>
 
-        <div th:if="${#lists.isEmpty(trips)}" class="alert alert-info mt-3">
-            Nenhuma viagem encontrada. Tenta outro destino!
+        <div th:if="${#lists.isEmpty(trips)}" class="alert alert-info mt-3 text-center">
+            Nenhuma viagem encontrada para este destino. 🌍
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

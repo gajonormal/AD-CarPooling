@@ -1,8 +1,11 @@
 package com.example.frontend_service.controller;
 
+import com.example.frontend_service.client.BookingClient; // ⚠️ Importante
 import com.example.frontend_service.client.TripClient;
+import com.example.frontend_service.client.VehicleClient;
 import com.example.frontend_service.dto.TripDTO;
 import com.example.frontend_service.dto.UserDTO;
+import com.example.frontend_service.dto.VehicleDTO;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -10,77 +13,66 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 public class TripController {
 
-    @Autowired
-    private TripClient tripClient;
+    @Autowired private TripClient tripClient;
+    @Autowired private VehicleClient vehicleClient;
 
-    // 1. Mostrar o formulário de CRIAÇÃO (Só Condutor)
+    @Autowired private BookingClient bookingClient; // 👇 1. ADICIONADO ISTO!
+
     @GetMapping("/trips/new")
     public String showCreateTripForm(Model model, HttpSession session) {
         UserDTO user = (UserDTO) session.getAttribute("user");
         if (user == null) return "redirect:/login";
 
-        if (!"DRIVER".equalsIgnoreCase(user.getType())) return "redirect:/dashboard";
+        try {
+            List<VehicleDTO> myCars = vehicleClient.getVehiclesByOwner(user.getId());
+            model.addAttribute("cars", myCars);
+        } catch (Exception e) {
+            model.addAttribute("error", "Erro ao carregar veículos.");
+        }
 
         model.addAttribute("trip", new TripDTO());
         return "create-trip";
     }
 
-    // 2. Processar a CRIAÇÃO (Só Condutor)
     @PostMapping("/trips")
-    public String createTrip(@ModelAttribute TripDTO trip, HttpSession session) {
+    public String createTrip(@ModelAttribute TripDTO trip, HttpSession session, RedirectAttributes redirectAttributes) {
         UserDTO user = (UserDTO) session.getAttribute("user");
-
         if (user == null) return "redirect:/login";
-        if (!"DRIVER".equalsIgnoreCase(user.getType())) return "redirect:/dashboard";
 
         try {
             trip.setDriverId(user.getId());
+            trip.setStatus("CREATED");
             tripClient.createTrip(trip);
-            System.out.println(">>> Viagem criada por: " + user.getName());
+            redirectAttributes.addFlashAttribute("success", "Viagem criada com sucesso! 🚗");
         } catch (Exception e) {
-            System.out.println(">>> Erro ao criar viagem: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Erro ao criar viagem: " + e.getMessage());
         }
-
-        return "redirect:/dashboard"; // Mudei para Dashboard para ele ver logo os botões
+        return "redirect:/dashboard";
     }
 
-    // 3. PESQUISA (FALTAVA ISTO!) 🔍
-    // É chamado quando o passageiro usa a barra de pesquisa
-    @GetMapping("/trips/search")
-    public String searchTrips(@RequestParam(required = false) String destination, Model model, HttpSession session) {
-        if (session.getAttribute("user") == null) return "redirect:/login";
-
+    // 👇 2. AQUI ESTAVA O PROBLEMA!
+    @PostMapping("/trips/{id}/finish")
+    public String finishTrip(@PathVariable Long id, @RequestParam Double price, HttpSession session, RedirectAttributes redirectAttributes) {
         try {
-            // Vai buscar todas as viagens
-            List<TripDTO> allTrips = tripClient.getAllTrips();
+            // A. Mudar estado para Visual (Cinza/Concluído)
+            tripClient.updateStatus(id, "FINISHED");
 
-            // Se o utilizador escreveu um destino, filtramos a lista
-            if (destination != null && !destination.isEmpty()) {
-                List<TripDTO> filteredTrips = allTrips.stream()
-                        .filter(t -> t.getDestination().toLowerCase().contains(destination.toLowerCase()))
-                        .collect(Collectors.toList());
-                model.addAttribute("trips", filteredTrips);
-            } else {
-                model.addAttribute("trips", allTrips);
-            }
+            // B. O QUE FALTAVA: Mandar calcular e processar os pagamentos!
+            bookingClient.finishTripPayments(id, price);
 
+            redirectAttributes.addFlashAttribute("success", "Viagem terminada e pagamentos processados! 💰");
         } catch (Exception e) {
-            model.addAttribute("trips", new ArrayList<>());
+            redirectAttributes.addFlashAttribute("error", "Erro ao terminar viagem: " + e.getMessage());
         }
-
-        // Reutilizamos o HTML do dashboard do passageiro, mas agora com resultados filtrados
-        // Ou podes criar um "search-results.html" se preferires
-        UserDTO user = (UserDTO) session.getAttribute("user");
-        model.addAttribute("user", user);
-        return "dashboard-passenger";
+        return "redirect:/dashboard";
     }
 }
