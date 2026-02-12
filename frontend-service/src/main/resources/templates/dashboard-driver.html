@@ -8,10 +8,18 @@
 
 <nav class="navbar navbar-dark bg-dark p-3">
     <div class="container">
-        <span class="navbar-brand">🚖 Painel do Condutor</span>
+        <a class="navbar-brand fw-bold" href="/dashboard">
+            <i class="bi bi-taxi-front-fill text-warning"></i> Painel do Condutor
+        </a>
+
         <div class="d-flex gap-2">
-            <span class="navbar-text text-white me-3" th:text="'Olá, ' + ${user.name}"></span>
-            <a href="/logout" class="btn btn-outline-light btn-sm">Sair</a>
+            <a href="/profile" class="btn btn-outline-warning btn-sm fw-bold">
+                <i class="bi bi-person-circle"></i> O Meu Perfil
+            </a>
+
+            <a href="/logout" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-box-arrow-right"></i> Sair
+            </a>
         </div>
     </div>
 </nav>

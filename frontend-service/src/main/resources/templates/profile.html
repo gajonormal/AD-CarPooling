@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>O Meu Perfil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body { background-color: #f8f9fa; }
+        .profile-card { max-width: 600px; margin: 50px auto; border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .card-header { background-color: #0d6efd; color: white; border-radius: 15px 15px 0 0 !important; padding: 20px; }
+        /* Box de Rating melhorada */
+        .rating-box {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+            color: #856404;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 25px;
+            border: 1px solid #ffeeba;
+        }
+        .stars-display i { font-size: 1.2rem; margin: 0 2px; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/dashboard">🚗 Car Pooling</a>
+        <a href="/logout" class="btn btn-outline-light btn-sm">Sair</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card profile-card">
+        <div class="card-header text-center">
+            <h3><i class="bi bi-person-circle"></i> O Meu Perfil</h3>
+        </div>
+        <div class="card-body p-4">
+
+            <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                ✅ Perfil atualizado com sucesso!
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="rating-box shadow-sm">
+                <h6 class="text-uppercase fw-bold small mb-2" style="letter-spacing: 1px;">Reputação na Comunidade</h6>
+                <h2 class="display-5 fw-bold mb-1">
+                    <span th:text="${#numbers.formatDecimal(averageRating, 1, 1)}">0.0</span>
+                    <i class="bi bi-star-fill text-warning"></i>
+                </h2>
+
+                <div class="stars-display mb-2">
+                    <i th:each="i : ${#numbers.sequence(1, 5)}"
+                       class="bi"
+                       th:classappend="${i <= averageRating ? 'bi-star-fill text-warning' : (i - 0.5 <= averageRating ? 'bi-star-half text-warning' : 'bi-star text-muted')}">
+                    </i>
+                </div>
+                <small class="text-muted d-block">Média calculada em tempo real pelo serviço de avaliações.</small>
+            </div>
+
+            <form action="/profile/update" method="post">
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nome Completo</label>
+                    <input type="text" class="form-control" name="name" th:value="${user.name}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email</label>
+                    <input type="email" class="form-control" name="email" th:value="${user.email}" required>
+                    <div class="form-text text-warning">⚠ Atenção: Se mudares o email, usa o novo no próximo login.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nova Password</label>
+                    <input type="password" class="form-control" name="password" placeholder="Deixa em branco para manter a atual">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Preferências de Viagem</label>
+                    <textarea class="form-control" name="preferences" rows="3" th:text="${user.preferences}"
+                              placeholder="Ex: Gosto de ouvir música rock..."></textarea>
+                </div>
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-save"></i> Guardar Alterações
+                    </button>
+                    <a href="/dashboard" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar ao Dashboard
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

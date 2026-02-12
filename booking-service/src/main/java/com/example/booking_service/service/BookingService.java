@@ -127,4 +127,30 @@ public class BookingService {
     public List<Booking> getBookingsByTrip(Long tripId) {
         return repository.findByTripId(tripId);
     }
+
+    // ==========================================================
+    //       NOVOS MÉTODOS PARA O HISTÓRICO 📜
+    // ==========================================================
+
+    /**
+     * Retorna os IDs de todos os passageiros que EFETIVAMENTE viajaram (status COMPLETED).
+     * Chamado pelo Frontend para mostrar ao Condutor quem ele levou.
+     */
+    public List<Long> getPassengerIdsByTrip(Long tripId) {
+        return repository.findByTripId(tripId).stream()
+                .filter(b -> "COMPLETED".equalsIgnoreCase(b.getStatus()))
+                .map(Booking::getPassengerId)
+                .toList();
+    }
+
+    /**
+     * Retorna os IDs das viagens onde o utilizador foi como passageiro e a viagem terminou.
+     * Chamado pelo Frontend para montar a lista do Histórico do Passageiro.
+     */
+    public List<Long> getTripIdsByPassenger(Long passengerId) {
+        return repository.findByPassengerId(passengerId).stream()
+                .filter(b -> "COMPLETED".equalsIgnoreCase(b.getStatus()))
+                .map(Booking::getTripId)
+                .toList();
+    }
 }

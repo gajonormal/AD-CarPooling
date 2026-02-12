@@ -19,5 +19,6 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     // 3. 👇 A CORREÇÃO: Buscar VIAGENS pelo ID do Condutor (não Veículos)
     List<Trip> findByDriverId(Long driverId);
 
+    List<Trip> findByDriverIdAndStatus(Long driverId, TripStatus status);
 
 }

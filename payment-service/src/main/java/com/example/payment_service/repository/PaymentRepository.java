@@ -7,4 +7,5 @@ import java.util.List;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     // Encontrar pagamento por ID da reserva
     Payment findByBookingId(Long bookingId);
+    List<Payment> findByUserId(Long userId);
 }

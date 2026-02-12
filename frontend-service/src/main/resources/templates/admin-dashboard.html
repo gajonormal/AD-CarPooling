@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Painel de Administração</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5 mb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>🛡️ Administração do Sistema</h1>
+        <a href="/dashboard" class="btn btn-secondary">Voltar ao Site</a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body text-center">
+                    <h5>Total Utilizadores</h5>
+                    <h2 th:text="${metrics.totalUsers}">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body text-center">
+                    <h5>CO2 Poupado (kg)</h5>
+                    <h2 th:text="${metrics.co2Saved}">0.0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark shadow">
+                <div class="card-body text-center">
+                    <h5>Contas Suspensas</h5>
+                    <h2 th:text="${metrics.suspendedUsers}">0</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-5">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0 fw-bold">👥 Gestão de Utilizadores</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th class="ps-4">ID</th>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th class="text-end pe-4">Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${users}">
+                    <td class="ps-4" th:text="${u.id}"></td>
+                    <td th:text="${u.name}"></td>
+                    <td th:text="${u.email}"></td>
+                    <td>
+                        <span class="badge bg-secondary" th:text="${u.type}">USER</span>
+                    </td>
+                    <td>
+                        <span th:if="${u.suspended}" class="badge bg-danger">Suspenso</span>
+                        <span th:unless="${u.suspended}" class="badge bg-success">Ativo</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <a th:if="${u.type != 'ADMIN'}"
+                           th:href="@{/admin/suspend/{id}(id=${u.id})}"
+                           class="btn btn-sm"
+                           th:classappend="${u.suspended} ? 'btn-success' : 'btn-danger'"
+                           th:text="${u.suspended} ? 'Reativar' : 'Suspender'">
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white py-3">
+            <h5 class="mb-0 fw-bold">🚗 Veículos Registados</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th class="ps-4">ID</th>
+                    <th>Marca/Modelo</th>
+                    <th>Matrícula</th>
+                    <th>ID do Dono</th>
+                    <th class="text-end pe-4">Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="v : ${vehicles}">
+                    <td class="ps-4 fw-bold" th:text="${v.id}">#</td>
+                    <td th:text="${v.brand + ' ' + v.model}">Carro</td>
+                    <td th:text="${v.licensePlate}">AA-00-AA</td>
+                    <td th:text="${v.ownerId}">-</td>
+                    <td class="text-end pe-4">
+                        <a th:href="@{/admin/vehicle/delete/{id}(id=${v.id})}"
+                           class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('Aviso: Ao remover o veículo, todas as viagens associadas a ele podem ser afetadas. Confirmar?')">
+                            <i class="bi bi-trash"></i> Remover
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${vehicles == null or #lists.isEmpty(vehicles)}">
+                    <td colspan="5" class="text-center py-4 text-muted">
+                        Nenhum veículo registado no sistema de boleias.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

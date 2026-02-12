@@ -23,7 +23,6 @@ public class BookingController {
     @Autowired private TripClient tripClient;
     @Autowired private AuthClient authClient;
 
-    // 1. CRIAR RESERVA
     @PostMapping
     public ResponseEntity<?> createBooking(@RequestBody Booking booking) {
         try {
@@ -34,59 +33,86 @@ public class BookingController {
         }
     }
 
-    // 👇 2. LISTAR POR VIAGEM (FALTAVA ESTE!!!)
-    // Sem isto, o Dashboard do Condutor não vê os pedidos.
     @GetMapping("/trip/{tripId}")
     public List<Booking> getBookingsByTrip(@PathVariable Long tripId) {
         return service.getBookingsByTrip(tripId);
     }
 
-    // 3. ACEITAR (FALTAVA ESTE!!!)
     @PostMapping("/{id}/accept")
     public void acceptBooking(@PathVariable Long id) {
         service.acceptBooking(id);
     }
 
-    // 4. REJEITAR (FALTAVA ESTE!!!)
     @PostMapping("/{id}/reject")
     public void rejectBooking(@PathVariable Long id) {
         service.rejectBooking(id);
     }
 
-    // 5. LISTAR TODAS (Genérico)
     @GetMapping
     public List<Booking> getAllBookings() {
         return service.getAllBookings();
     }
 
-    // 6. DETALHES COMPLETOS
+    // ==========================================================
+    //       NOVOS MÉTODOS PARA O HISTÓRICO 📜
+    // ==========================================================
+
+    /**
+     * Retorna os IDs de todos os passageiros de uma viagem.
+     * Útil para o condutor ver quem participou no histórico.
+     */
+    @GetMapping("/trip/{tripId}/passengers")
+    public List<Long> getPassengerIdsByTrip(@PathVariable Long tripId) {
+        return service.getPassengerIdsByTrip(tripId);
+    }
+
+    /**
+     * Retorna os IDs das viagens onde um passageiro participou.
+     * Útil para montar o histórico do passageiro.
+     */
+    @GetMapping("/user/{passengerId}/trips")
+    public List<Long> getTripIdsByUser(@PathVariable Long passengerId) {
+        return service.getTripIdsByPassenger(passengerId);
+    }
+
+    // ==========================================================
+    //       MÉTODOS EXISTENTES (FULL DETAILS & PAYMENTS)
+    // ==========================================================
+
     @GetMapping("/{id}/full")
     public ResponseEntity<?> getFullBookingDetails(@PathVariable Long id) {
         Booking booking = service.getBookingById(id);
         if (booking == null) return ResponseEntity.notFound().build();
 
+        // 👇 AQUI: Declarar e instanciar o DTO (Isto resolve o erro a vermelho)
         BookingResponseDTO response = new BookingResponseDTO();
+
         response.setBookingId(booking.getId());
         response.setStatus(booking.getStatus());
         response.setPrice(booking.getPrice());
 
+        // Buscar nome do passageiro via Auth Service
         try {
             UserDTO user = authClient.getUserById(booking.getPassengerId());
             response.setPassengerName(user != null ? user.getName() : "Desconhecido");
-        } catch (Exception e) { response.setPassengerName("Erro Auth"); }
+        } catch (Exception e) {
+            response.setPassengerName("Erro Auth Service");
+        }
 
+        // Buscar detalhes da viagem via Trip Service
         try {
             TripDTO trip = tripClient.getTripById(booking.getTripId());
             if (trip != null) {
                 response.setDestination(trip.getDestination());
                 response.setDepartureTime(trip.getDepartureTime());
             }
-        } catch (Exception e) { response.setDestination("Erro Trip"); }
+        } catch (Exception e) {
+            response.setDestination("Erro Trip Service");
+        }
 
         return ResponseEntity.ok(response);
     }
 
-    // 7. FINALIZAR PAGAMENTOS
     @PostMapping("/trips/{tripId}/finish-payments")
     public ResponseEntity<String> finishTripPayments(@PathVariable Long tripId, @RequestParam Double totalPrice) {
         try {

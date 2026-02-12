@@ -33,4 +33,9 @@ public class VehicleService {
     public List<Vehicle> getVehiclesByOwner(Long ownerId) {
         return repository.findByOwnerId(ownerId);
     }
+
+    // No VehicleService.java
+    public void deleteVehicle(Long id) {
+        repository.deleteById(id);
+    }
 }

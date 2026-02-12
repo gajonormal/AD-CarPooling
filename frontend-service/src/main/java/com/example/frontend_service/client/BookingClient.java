@@ -15,22 +15,23 @@ public interface BookingClient {
     @GetMapping("/bookings")
     List<BookingDTO> getAllBookings();
 
-    // Rota para finalizar pagamentos
     @PostMapping("/bookings/trips/{tripId}/finish-payments")
-    void finishTripPayments(@PathVariable("tripId") Long tripId,
-                            @RequestParam("totalPrice") Double totalPrice);
+    void finishTripPayments(@PathVariable("tripId") Long tripId, @RequestParam("totalPrice") Double totalPrice);
 
-    // 👇 O QUE FALTA PARA A CONFIRMAÇÃO FUNCIONAR:
-
-    // 1. Condutor Aceita
     @PostMapping("/bookings/{id}/accept")
     void acceptBooking(@PathVariable("id") Long id);
 
-    // 2. Condutor Rejeita
     @PostMapping("/bookings/{id}/reject")
     void rejectBooking(@PathVariable("id") Long id);
 
-    // 3. Ver pedidos de uma viagem específica (Para listar no Dashboard)
     @GetMapping("/bookings/trip/{tripId}")
     List<BookingDTO> getBookingsByTrip(@PathVariable("tripId") Long tripId);
+
+    // --- NOVOS MÉTODOS PARA O HISTÓRICO ---
+
+    @GetMapping("/bookings/trip/{tripId}/passengers")
+    List<Long> getPassengerIdsByTrip(@PathVariable("tripId") Long tripId);
+
+    @GetMapping("/bookings/user/{passengerId}/trips")
+    List<Long> getTripIdsByUser(@PathVariable("passengerId") Long passengerId);
 }

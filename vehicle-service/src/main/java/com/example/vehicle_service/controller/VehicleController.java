@@ -1,8 +1,9 @@
 package com.example.vehicle_service.controller;
 
 import com.example.vehicle_service.model.Vehicle;
-import com.example.vehicle_service.service.VehicleService; // Importa o Service que criámos
+import com.example.vehicle_service.service.VehicleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity; // Importa isto
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,30 +13,32 @@ import java.util.List;
 public class VehicleController {
 
     @Autowired
-    private VehicleService service; // Usamos o Service, não o Repository direto
+    private VehicleService service;
 
-    // 1. Condutor regista um novo carro
     @PostMapping
     public Vehicle createVehicle(@RequestBody Vehicle vehicle) {
         return service.createVehicle(vehicle);
     }
 
-    // 2. (Opcional) Admin ver todos os carros do sistema
     @GetMapping
     public List<Vehicle> getAllVehicles() {
         return service.getAllVehicles();
     }
 
-    // 3. (Opcional) Ver detalhes de um carro específico
     @GetMapping("/{id}")
     public Vehicle getVehicleById(@PathVariable Long id) {
         return service.getVehicleById(id);
     }
 
-    // 4. Condutor vê a SUA lista de carros (Para escolher na Viagem)
-    // --- ESTE É O ENDPOINT IMPORTANTE ---
     @GetMapping("/owner/{ownerId}")
     public List<Vehicle> getVehiclesByOwner(@PathVariable Long ownerId) {
         return service.getVehiclesByOwner(ownerId);
+    }
+
+    // 👇 ADICIONA ESTE MÉTODO QUE ESTAVA EM FALTA 👇
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteVehicle(@PathVariable("id") Long id) {
+        service.deleteVehicle(id); // Garante que este método existe no teu VehicleService
+        return ResponseEntity.noContent().build();
     }
 }
