@@ -9,7 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-
+import com.example.frontend_service.dto.UserDTO;
 import java.util.List;
 
 @Controller
@@ -21,10 +21,13 @@ public class CarController {
     // 1. Listar Carros (Já deves ter isto)
     @GetMapping("/cars")
     public String listCars(Model model, HttpSession session) {
-        if (session.getAttribute("user") == null) return "redirect:/login";
+        UserDTO user = (UserDTO) session.getAttribute("user");
+        if (user == null) return "redirect:/login";
 
         try {
-            List<VehicleDTO> cars = vehicleClient.getAllVehicles();
+            // ANTES: List<VehicleDTO> cars = vehicleClient.getAllVehicles();
+            // AGORA: Só os meus carros!
+            List<VehicleDTO> cars = vehicleClient.getVehiclesByOwner(user.getId());
             model.addAttribute("cars", cars);
         } catch (Exception e) {
             model.addAttribute("error", "Erro ao carregar carros.");
@@ -44,15 +47,23 @@ public class CarController {
     // 3. Guardar o Carro (FALTAVA ISTO!)
     @PostMapping("/cars")
     public String createCar(@ModelAttribute VehicleDTO car, HttpSession session) {
-        if (session.getAttribute("user") == null) return "redirect:/login";
+
+        // 1. Recuperar o objeto UserDTO da sessão (Cast explícito)
+        UserDTO user = (UserDTO) session.getAttribute("user");
+
+        // 2. Se for nulo, manda fazer login
+        if (user == null) return "redirect:/login";
 
         try {
-            // Opcional: associar o ID do dono se o DTO tiver esse campo
-            // car.setOwnerId(user.getId());
+            // 3. Agora a variável 'user' já existe e o Java já não reclama!
+            car.setOwnerId(user.getId());
+
             vehicleClient.createVehicle(car);
         } catch (Exception e) {
             System.out.println("Erro ao criar carro: " + e.getMessage());
         }
-        return "redirect:/cars";
+
+        // Sugestão: Redireciona para o dashboard para veres logo o botão de criar viagem
+        return "redirect:/dashboard";
     }
 }

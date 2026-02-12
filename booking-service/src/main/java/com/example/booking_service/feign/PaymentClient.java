@@ -5,10 +5,11 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-// O nome "payment-service" tem de ser igual ao que puseste no application.properties do Payment
+// O "name" tem de ser igual ao spring.application.name do payment-service
 @FeignClient(name = "payment-service")
 public interface PaymentClient {
 
+    // Isto liga diretamente ao teu método @PostMapping no PaymentController
     @PostMapping("/payments")
-    Object processPayment(@RequestBody PaymentDTO payment);
+    PaymentDTO processPayment(@RequestBody PaymentDTO payment);
 }

@@ -8,4 +8,7 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     // Para ver o histórico de um passageiro
     List<Booking> findByPassengerId(Long passengerId);
+    List<Booking> findByTripId(Long tripId);
+
+    boolean existsByTripIdAndPassengerId(Long tripId, Long passengerId);
 }

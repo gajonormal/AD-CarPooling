@@ -1,13 +1,12 @@
 package com.example.trip_service.service;
 
 import com.example.trip_service.model.Trip;
-import com.example.trip_service.model.TripStatus; // Não te esqueças de importar o Enum!
+import com.example.trip_service.model.TripStatus;
 import com.example.trip_service.repository.TripRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TripService {
@@ -15,13 +14,11 @@ public class TripService {
     @Autowired
     private TripRepository repository;
 
-    // --- CRIAR VIAGEM (Atualizado) ---
+    // --- CRIAR VIAGEM ---
     public Trip createTrip(Trip trip) {
-        // 1. Regra de Negócio: Toda a viagem nova nasce com o estado CREATED
-        trip.setStatus(TripStatus.CREATED);
+        trip.setStatus(TripStatus.CREATED); // Nasce sempre como CREATED
 
-        // 2. Prevenção de Erros: Se o user não enviar coordenadas, metemos 0.0
-        // Isto cumpre o requisito de ter campos de localização, mesmo que vazios
+        // Prevenção de NullPointerException nas coordenadas
         if (trip.getOriginLat() == null) trip.setOriginLat(0.0);
         if (trip.getOriginLon() == null) trip.setOriginLon(0.0);
         if (trip.getDestLat() == null) trip.setDestLat(0.0);
@@ -30,49 +27,53 @@ public class TripService {
         return repository.save(trip);
     }
 
-    // Listar todas as viagens
+    // Listar APENAS as viagens disponíveis (CREATED)
+    // Se o condutor quiser ver o histórico, usaremos outro método no futuro
     public List<Trip> getAllTrips() {
-        return repository.findAll();
+        return repository.findByStatus(TripStatus.CREATED);
     }
 
-    // Procurar viagens por destino (ex: "Lisboa")
+    // Procurar viagens por destino QUE AINDA ESTEJAM ABERTAS
     public List<Trip> searchTrips(String destination) {
-        return repository.findByDestination(destination);
+        return repository.findByDestinationAndStatus(destination, TripStatus.CREATED);
     }
-
-    // Obter detalhes de uma viagem específica
+    // Obter detalhes
     public Trip getTripById(Long id) {
         return repository.findById(id).orElse(null);
     }
 
-    // --- NOVO MÉTODO (Obrigatório para o Controller funcionar) ---
-    // Permite mudar de CREATED -> IN_PROGRESS -> FINISHED
-    public Trip updateTripStatus(Long id, TripStatus newStatus) {
-        Optional<Trip> tripOptional = repository.findById(id);
+    // --- ATUALIZAR ESTADO (Único método necessário) ---
+    public Trip updateStatus(Long id, String statusStr) {
+        Trip trip = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Viagem não encontrada"));
 
-        if (tripOptional.isPresent()) {
-            Trip trip = tripOptional.get();
+        try {
+            // Converte a String "FINISHED" para o Enum TripStatus.FINISHED
+            TripStatus newStatus = TripStatus.valueOf(statusStr.toUpperCase());
             trip.setStatus(newStatus);
             return repository.save(trip);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Estado inválido: " + statusStr);
         }
-        return null; // Retorna null se a viagem não existir
     }
-    // Lógica para diminuir 1 lugar
+
+    // --- REDUZIR LUGARES ---
     public boolean reduceSeat(Long tripId) {
         Trip trip = repository.findById(tripId).orElse(null);
 
-        // Se a viagem existe e tem lugares > 0
         if (trip != null && trip.getAvailableSeats() > 0) {
             trip.setAvailableSeats(trip.getAvailableSeats() - 1);
 
-            // Se ficou com 0, muda estado para FULL
+            // Se encheu, muda o estado automaticamente
             if (trip.getAvailableSeats() == 0) {
-                trip.setStatus(TripStatus.valueOf("FULL"));
+                // Só muda para FULL se ainda estiver em CREATED (não muda se já estiver em progresso)
+                if (trip.getStatus() == TripStatus.CREATED) {
+                    trip.setStatus(TripStatus.FULL);
+                }
             }
-
             repository.save(trip);
-            return true; // Sucesso
+            return true;
         }
-        return false; // Falha (não há lugares ou viagem não existe)
+        return false;
     }
 }
