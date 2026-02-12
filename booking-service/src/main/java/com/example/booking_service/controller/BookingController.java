@@ -18,9 +18,8 @@ import java.util.List;
 public class BookingController {
 
     @Autowired
-    private BookingService service; // Agora usamos o Service!
+    private BookingService service;
 
-    // Precisamos destes clientes aqui SÓ para o método "full" details (opcional)
     @Autowired private TripClient tripClient;
     @Autowired private AuthClient authClient;
 
@@ -35,17 +34,35 @@ public class BookingController {
         }
     }
 
-    // 2. LISTAR TODAS
+    // 👇 2. LISTAR POR VIAGEM (FALTAVA ESTE!!!)
+    // Sem isto, o Dashboard do Condutor não vê os pedidos.
+    @GetMapping("/trip/{tripId}")
+    public List<Booking> getBookingsByTrip(@PathVariable Long tripId) {
+        return service.getBookingsByTrip(tripId);
+    }
+
+    // 3. ACEITAR (FALTAVA ESTE!!!)
+    @PostMapping("/{id}/accept")
+    public void acceptBooking(@PathVariable Long id) {
+        service.acceptBooking(id);
+    }
+
+    // 4. REJEITAR (FALTAVA ESTE!!!)
+    @PostMapping("/{id}/reject")
+    public void rejectBooking(@PathVariable Long id) {
+        service.rejectBooking(id);
+    }
+
+    // 5. LISTAR TODAS (Genérico)
     @GetMapping
     public List<Booking> getAllBookings() {
         return service.getAllBookings();
     }
 
-    // 3. OBTER DETALHES COMPLETOS (Mantive a tua lógica de DTOs aqui)
+    // 6. DETALHES COMPLETOS
     @GetMapping("/{id}/full")
     public ResponseEntity<?> getFullBookingDetails(@PathVariable Long id) {
         Booking booking = service.getBookingById(id);
-
         if (booking == null) return ResponseEntity.notFound().build();
 
         BookingResponseDTO response = new BookingResponseDTO();
@@ -53,7 +70,6 @@ public class BookingController {
         response.setStatus(booking.getStatus());
         response.setPrice(booking.getPrice());
 
-        // Preencher dados extra (Podes mover isto para o Service depois se quiseres)
         try {
             UserDTO user = authClient.getUserById(booking.getPassengerId());
             response.setPassengerName(user != null ? user.getName() : "Desconhecido");
@@ -68,5 +84,16 @@ public class BookingController {
         } catch (Exception e) { response.setDestination("Erro Trip"); }
 
         return ResponseEntity.ok(response);
+    }
+
+    // 7. FINALIZAR PAGAMENTOS
+    @PostMapping("/trips/{tripId}/finish-payments")
+    public ResponseEntity<String> finishTripPayments(@PathVariable Long tripId, @RequestParam Double totalPrice) {
+        try {
+            service.processPaymentsForTrip(tripId, totalPrice);
+            return ResponseEntity.ok("Pagamentos processados e divididos com sucesso!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao processar pagamentos: " + e.getMessage());
+        }
     }
 }

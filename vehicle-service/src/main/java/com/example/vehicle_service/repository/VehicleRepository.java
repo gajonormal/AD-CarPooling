@@ -5,8 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
-
-    // Método mágico do Spring Data JPA:
-    // Encontra todos onde o campo "isRented" é falso
-    List<Vehicle> findByIsRentedFalse();
+    // Encontrar todos os carros de um condutor específico
+    List<Vehicle> findByOwnerId(Long ownerId);
 }

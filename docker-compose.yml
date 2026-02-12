@@ -1,14 +1,14 @@
 version: '3.8'
 
 services:
-  # --- 1. EUREKA SERVER (O Registo Central) ---
+  # --- 1. EUREKA SERVER ---
   service-registry:
     build: ./service-registry/service-registry
     ports:
       - "8761:8761"
     container_name: service-registry
 
-  # --- 2. API GATEWAY (A Porta de Entrada - 8080) ---
+  # --- 2. API GATEWAY ---
   api-gateway:
     build: ./api-gateway/api-gateway
     ports:
@@ -18,58 +18,63 @@ services:
     depends_on:
       - service-registry
 
-  # --- 3. AUTH SERVICE (Autenticação - 8081) ---
+  # --- 3. AUTH SERVICE (Adicionei a linha do H2) ---
   auth-service:
     build: ./auth-service/auth-service
     ports:
       - "8081:8081"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS=true  # <--- NOVA LINHA
     depends_on:
       - service-registry
 
-  # --- 4. TRIP SERVICE (Viagens - 8082) ---
+  # --- 4. TRIP SERVICE (Adicionei a linha do H2) ---
   trip-service:
     build: ./trip-service
     ports:
       - "8082:8082"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS=true  # <--- NOVA LINHA
     depends_on:
       - service-registry
       - auth-service
 
-  # --- 5. BOOKING SERVICE (Reservas - 8083) ---
+  # --- 5. BOOKING SERVICE (Adicionei a linha do H2) ---
   booking-service:
     build: ./booking-service
     ports:
       - "8083:8083"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS=true  # <--- NOVA LINHA
     depends_on:
       - service-registry
 
-  # --- 6. PAYMENT SERVICE (Pagamentos - 8084) ---
+  # --- 6. PAYMENT SERVICE (Adicionei a linha do H2) ---
   payment-service:
     build: ./payment-service
     ports:
       - "8084:8084"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS=true  # <--- NOVA LINHA
     depends_on:
       - service-registry
 
-  # --- 7. VEHICLE SERVICE (Veículos - 8085) ---
+  # --- 7. VEHICLE SERVICE (Adicionei a linha do H2) ---
   vehicle-service:
     build: ./vehicle-service
     ports:
       - "8085:8085"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS=true  # <--- NOVA LINHA
     depends_on:
       - service-registry
 
-  # --- 8. FRONTEND SERVICE (Web - 9090) ---
+  # --- 8. FRONTEND SERVICE ---
   frontend-service:
     build: ./frontend-service
     ports:

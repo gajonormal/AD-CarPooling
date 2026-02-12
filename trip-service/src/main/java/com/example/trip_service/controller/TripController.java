@@ -4,7 +4,7 @@ import com.example.trip_service.dto.UserDTO;
 import com.example.trip_service.dto.VehicleDTO;
 import com.example.trip_service.feign.VehicleClient;
 import com.example.trip_service.model.Trip;
-import com.example.trip_service.model.TripStatus; // <--- OBRIGATÓRIO
+import com.example.trip_service.model.TripStatus;
 import com.example.trip_service.service.TripService;
 import com.example.trip_service.feign.UserClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +28,6 @@ public class TripController {
     // 1. Criar Viagem
     @PostMapping
     public Trip createTrip(@RequestBody Trip trip) {
-        // CORREÇÃO: Usar o Enum e não String
-        trip.setStatus(TripStatus.CREATED);
         return service.createTrip(trip);
     }
 
@@ -51,21 +49,25 @@ public class TripController {
         return service.getTripById(id);
     }
 
-    // 5. Alterar Estado da Viagem
-    @PatchMapping("/{id}/status")
-    public Trip updateStatus(@PathVariable Long id, @RequestParam TripStatus status) {
-        // O Spring converte automaticamente o texto da URL (ex: ?status=IN_PROGRESS)
-        // para o Enum TripStatus.IN_PROGRESS
-        return service.updateTripStatus(id, status);
+    // 5. Alterar Estado da Viagem (PUT é o padrão REST correto)
+    // Recebe String na URL e converte para Enum no Service
+    @PutMapping("/{id}/status")
+    public Trip updateStatus(@PathVariable Long id, @RequestParam String status) {
+        return service.updateStatus(id, status);
     }
 
-    // 6. Detalhes Completos (Condutor + Veículo)
+    // 6. Reduzir Lugares (Chamado pelo Booking Service)
+    @PostMapping("/{id}/reduce")
+    public boolean reduceSeat(@PathVariable Long id) {
+        return service.reduceSeat(id);
+    }
+
+    // 7. Detalhes Completos (Condutor + Veículo)
     @GetMapping("/{id}/full-details")
     public String getTripFullDetails(@PathVariable Long id) {
         Trip trip = service.getTripById(id);
         if (trip == null) return "Viagem não encontrada";
 
-        // Buscar Condutor
         String driverName = "Desconhecido";
         try {
             UserDTO user = userClient.getUserById(trip.getDriverId());
@@ -74,7 +76,6 @@ public class TripController {
             driverName = "Erro Auth";
         }
 
-        // Buscar Veículo
         String carDetails = "Carro não encontrado";
         try {
             if (trip.getVehicleId() != null) {
@@ -92,9 +93,4 @@ public class TripController {
                 " | Condutor: " + driverName +
                 " | Veículo: " + carDetails;
     }
-    @PostMapping("/{id}/reduce")
-    public boolean reduceSeat(@PathVariable Long id) {
-        return service.reduceSeat(id);
-    }
-
 }
